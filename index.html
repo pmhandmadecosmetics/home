@@ -696,7 +696,7 @@
                 <p>Luxurious face oil with rare botanicals — reduces dark spots, smooths wrinkles, and suits all skin types.</p>
             </div>
             <div class="hero-image">
-                <img src="https://rb.gy/2u3lch" alt="PM Face Oil" class="product-image" style="max-width: 100%; height: auto; border-radius: 20px; box-shadow: 0 30px 40px -18px rgba(150,20,30,0.2);">
+                <img src="https://shorturl.at/qK39l" alt="PM Face Oil" class="product-image" style="max-width: 100%; height: auto; border-radius: 20px; box-shadow: 0 30px 40px -18px rgba(150,20,30,0.2);">
             </div>
         </section>
 
@@ -906,7 +906,7 @@
         <div class="checkout-form-box">
             <div id="authGuest">
                 <h2>👤 Welcome</h2>
-                <p class="subtitle">Login or create an account with your mobile number</p>
+                <p class="subtitle">Customer Care : 9744705652</p>
                 <div class="auth-tabs">
                     <button id="tabLogin" class="active" type="button">Login</button>
                     <button id="tabSignup" type="button">Create account</button>
@@ -916,8 +916,12 @@
                     <input type="text" id="authName" placeholder="Enter your full name" autocomplete="name">
                 </div>
                 <div class="form-group">
-                    <label>Mobile Number *</label>
-                    <div class="phone-boxes" id="phoneBoxes"><input type="tel" class="phone-box" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Mobile digit 1"><input type="tel" class="phone-box" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Mobile digit 2"><input type="tel" class="phone-box" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Mobile digit 3"><input type="tel" class="phone-box" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Mobile digit 4"><input type="tel" class="phone-box" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Mobile digit 5"><input type="tel" class="phone-box" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Mobile digit 6"><input type="tel" class="phone-box" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Mobile digit 7"><input type="tel" class="phone-box" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Mobile digit 8"><input type="tel" class="phone-box" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Mobile digit 9"><input type="tel" class="phone-box" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Mobile digit 10"></div>
+                    <label for="authEmail">Email *</label>
+                    <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false">
+                </div>
+                <div class="form-group" id="authPhoneGroup" style="display:none;">
+                    <label for="authPhone">Mobile Number *</label>
+                    <input type="tel" id="authPhone" placeholder="10 digit mobile number" inputmode="numeric" maxlength="10" autocomplete="tel-national">
                 </div>
                 <div class="form-group">
                     <label for="authPassword">Password *</label>
@@ -936,8 +940,8 @@
         <div class="checkout-form-box signup-done">
             <div class="sd-icon">✅</div>
             <h2>Account created<span class="ml" lang="ml">അക്കൗണ്ട് സൃഷ്ടിച്ചു</span></h2>
-            <p class="sd-msg" style="margin-top:16px;">You can login after Administrator verification.</p>
-            <p class="sd-ml" lang="ml">അഡ്മിനിസ്ട്രേറ്റർ വെരിഫൈ ചെയ്ത ശേഷം നിങ്ങൾക്ക് ലോഗിൻ ചെയ്യാം.</p>
+            <p class="sd-msg" style="margin-top:16px;">Please confirm your email, then login.</p>
+            <p class="sd-ml" lang="ml">ഇമെയിൽ സ്ഥിരീകരിച്ച ശേഷം ലോഗിൻ ചെയ്യുക.</p>
             <button class="btn-submit" id="signupDoneOk" type="button">OK</button>
         </div>
     </div>
@@ -955,7 +959,7 @@
                     <div class="acct-avatar-wrap"><div class="acct-avatar" id="acctAvatar">U</div><button class="acct-cam" id="acctCam" type="button" aria-label="Change profile photo"><i class="fas fa-camera"></i></button><input type="file" id="avatarFile" accept="image/*" style="display:none"></div>
                     <div class="acct-hero-info">
                         <h1 id="acctName">Welcome</h1>
-                        <p><i class="fas fa-phone-alt"></i> +91 <span id="acctPhone"></span></p>
+                        <p><i class="fas fa-envelope"></i> <span id="acctPhone"></span></p>
                         <span class="acct-badge"><i class="fas fa-gem"></i> <span id="acctSince">Member</span></span>
                     </div>
                     <div class="acct-stats">
@@ -1009,7 +1013,7 @@
                             <input type="text" id="acctNameInput" placeholder="Your full name" autocomplete="name">
                         </div>
                         <div class="acct-field">
-                            <label for="acctPhoneInput">Mobile number</label>
+                            <label for="acctPhoneInput">Email</label>
                             <input type="text" id="acctPhoneInput" disabled>
                         </div>
                         <div class="acct-actions">
@@ -1208,7 +1212,7 @@
                 const errorHtml = `
                     <div style="padding:40px;text-align:center;color:#c8102e;grid-column:1/-1;">
                         <i class="fas fa-exclamation-circle" style="font-size:40px;display:block;margin-bottom:12px;"></i>
-                        Error loading products: ${error.message}
+                        Could not load products. Please check your connection and try again.
                         <br><br>
                         <button onclick="location.reload()" style="padding:10px 24px;background:#c8102e;color:white;border:none;border-radius:40px;cursor:pointer;font-weight:600;">Retry</button>
                     </div>
@@ -1595,6 +1599,7 @@
             document.getElementById('tabLogin').classList.toggle('active', !signup);
             document.getElementById('tabSignup').classList.toggle('active', signup);
             document.getElementById('authNameGroup').style.display = signup ? 'block' : 'none';
+            document.getElementById('authPhoneGroup').style.display = signup ? 'block' : 'none';
             document.getElementById('authSubmitText').textContent = signup ? 'Create account' : 'Login';
             document.getElementById('authPassword').setAttribute('autocomplete', signup ? 'new-password' : 'current-password');
             document.getElementById('authError').textContent = '';
@@ -1603,7 +1608,7 @@
         function openAuth() {
             document.getElementById('authGuest').style.display = 'block';
             setAuthMode(authMode);
-            setTimeout(() => { const f = phoneBoxes.findIndex(b => !b.value); phoneBoxes[f === -1 ? 0 : f].focus(); }, 150);
+            setTimeout(() => { document.getElementById('authEmail').focus(); }, 150);
             document.getElementById('authOverlay').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
@@ -1670,111 +1675,67 @@
             document.getElementById('authPassword').focus();
         });
 
-        // ----- approval list: only approved users in the `customers` table may login -----
-        // returns 'approved' | 'pending' | 'missing' | 'error'
-        let approvedUserId = null;
-        async function getApproval(user) {
-            try {
-                const meta = (user && user.user_metadata) || {};
-                const phone = normalizePhone(meta.phone || (user.email || '').split('@')[0]);
-                let filter = `id.eq.${user.id}`;
-                if (isValidPhone(phone)) filter += `,phone.eq.${phone}`;
-                const { data, error } = await supabaseClient.from('customers').select('id,approved').or(filter);
-                if (error) { console.error('Approval check error:', error); return 'error'; }
-                if (!data || data.length === 0) return 'missing';
-                return data.some(r => r.approved === true) ? 'approved' : 'pending';
-            } catch (e) { console.error(e); return 'error'; }
-        }
-        function approvalMessage(st) {
-            if (st === 'pending') return 'നിങ്ങളുടെ അക്കൗണ്ട് അഡ്മിനിസ്ട്രേറ്റർ അംഗീകരിക്കാൻ കാത്തിരിക്കുകയാണ്. കുറച്ച് കഴിഞ്ഞ് വീണ്ടും ശ്രമിക്കുക.';
-            if (st === 'missing') return 'Your number is not in our approved users list. Please contact us.';
-            return 'Could not verify your account right now. Please try again.';
-        }
-        // session found on page load / token change: keep it only if the user is approved
-        let verifyingId = null;
-        let signingUp = false;
-        async function verifySession(user) {
-            if (!user || signingUp || verifyingId === user.id) return;
-            verifyingId = user.id;
-            const st = await getApproval(user);
-            verifyingId = null;
-            if (st === 'approved') {
-                approvedUserId = user.id; currentUser = user; refreshAccountUI();
-            } else {
-                approvedUserId = null; currentUser = null;
-                await supabaseClient.auth.signOut();
-                refreshAccountUI(); closeAccountPage();
-                showToast(approvalMessage(st), 'error');
-            }
-        }
+        function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e); }
 
         async function submitAuth() {
             const errEl = document.getElementById('authError');
             errEl.textContent = '';
             const name = document.getElementById('authName').value.trim();
-            const phone = getAuthPhone();
+            const email = document.getElementById('authEmail').value.trim().toLowerCase();
+            const phone = normalizePhone(document.getElementById('authPhone').value);
             const password = document.getElementById('authPassword').value;
 
             if (authMode === 'signup' && !name) { errEl.textContent = 'Please enter your full name.'; return; }
-            if (!isValidPhone(phone)) { errEl.textContent = 'Enter a valid 10-digit mobile number.'; return; }
+            if (!isValidEmail(email)) { errEl.textContent = 'Enter a valid email address.'; return; }
+            if (authMode === 'signup' && !isValidPhone(phone)) { errEl.textContent = 'Enter a valid 10-digit mobile number.'; return; }
             if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
 
             const btn = document.getElementById('authSubmitBtn');
             btn.disabled = true;
             try {
-                const email = phoneToEmail(phone);
                 let signedUser = null;
                 if (authMode === 'signup') {
-                    signingUp = true;
                     const { data, error } = await supabaseClient.auth.signUp({
                         email, password,
                         options: { data: { full_name: name, phone: phone } }
                     });
                     if (error) {
-                        signingUp = false;
                         errEl.textContent = /already|registered/i.test(error.message)
-                            ? 'This mobile number is already registered. Please login.'
+                            ? 'This email is already registered. Please login.'
                             : /rate limit/i.test(error.message)
                                 ? 'Too many sign-up attempts right now. Please try again after a while.'
-                                : error.message;
+                                : 'Could not create your account. Please try again.';
                         return;
                     }
-                    // number already has a login (Supabase returns a fake user with no identities): do not treat as a new account
+                    // email already has a login (Supabase returns a fake user with no identities)
                     if (!data.user || (data.user.identities && data.user.identities.length === 0)) {
-                        signingUp = false;
-                        errEl.textContent = 'This mobile number is already registered. Please login.';
+                        errEl.textContent = 'This email is already registered. Please login.';
                         return;
                     }
-                    // add the new user to the approval list as "waiting" (skip if staff already added this number)
+                    // add the new user to the staff users list
                     try {
-                        const have = await supabaseClient.from('customers').select('id').or(`id.eq.${data.user.id},phone.eq.${phone}`);
+                        const have = await supabaseClient.from('customers').select('id').eq('id', data.user.id);
                         if (!have.error && (!have.data || have.data.length === 0)) {
-                            await supabaseClient.from('customers').insert([{ id: data.user.id, name: name, phone: phone, approved: false }]);
+                            await supabaseClient.from('customers').insert([{ id: data.user.id, name: name, email: email, phone: phone }]);
                         }
                     } catch (e) { console.error(e); }
-                    // never stay logged in after sign-up: wait for Administrator approval
-                    if (data.session) { await supabaseClient.auth.signOut(); }
-                    currentUser = null; approvedUserId = null; signingUp = false; refreshAccountUI();
-                    document.getElementById('authPassword').value = '';
-                    showSignupDone();
-                    return;
+                    if (!data.session) {
+                        // email confirmation is switched on in Supabase: they must confirm first
+                        document.getElementById('authPassword').value = '';
+                        showSignupDone();
+                        return;
+                    }
+                    signedUser = data.user;
+                    showToast('✅ Account created!', 'success');
                 } else {
                     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
                     if (error) {
                         if (/not confirmed/i.test(error.message)) { showSignupDone(); return; }
                         errEl.textContent = /invalid/i.test(error.message)
-                            ? 'Wrong mobile number or password.'
-                            : error.message;
+                            ? 'Wrong email or password.'
+                            : 'Could not login right now. Please try again.';
                         return;
                     }
-                    const st = await getApproval(data.user);
-                    if (st !== 'approved') {
-                        await supabaseClient.auth.signOut();
-                        currentUser = null; approvedUserId = null; refreshAccountUI();
-                        errEl.textContent = approvalMessage(st);
-                        return;
-                    }
-                    approvedUserId = data.user.id;
                     signedUser = data.user;
                     showToast('✅ Logged in!', 'success');
                 }
@@ -1800,47 +1761,6 @@
             showToast('Logged out', 'info');
         }
 
-        // ----- 10 single-digit boxes for the mobile number -----
-        const phoneBoxes = Array.from(document.querySelectorAll('#phoneBoxes .phone-box'));
-        function getAuthPhone() { return phoneBoxes.map(b => b.value).join(''); }
-        function syncPhoneBoxStyles() { phoneBoxes.forEach(b => b.classList.toggle('filled', /\d/.test(b.value))); }
-        phoneBoxes.forEach((box, i) => {
-            box.addEventListener('input', () => {
-                box.value = box.value.replace(/\D/g, '').slice(-1);
-                syncPhoneBoxStyles();
-                if (box.value && i < phoneBoxes.length - 1) phoneBoxes[i + 1].focus();
-                else if (box.value && i === phoneBoxes.length - 1) document.getElementById('authPassword').focus();
-            });
-            box.addEventListener('keydown', e => {
-                if (e.key === 'Backspace' && !box.value && i > 0) {
-                    e.preventDefault();
-                    phoneBoxes[i - 1].value = '';
-                    syncPhoneBoxStyles();
-                    phoneBoxes[i - 1].focus();
-                } else if (e.key === 'ArrowLeft' && i > 0) {
-                    e.preventDefault(); phoneBoxes[i - 1].focus();
-                } else if (e.key === 'ArrowRight' && i < phoneBoxes.length - 1) {
-                    e.preventDefault(); phoneBoxes[i + 1].focus();
-                } else if (e.key === 'Enter') {
-                    submitAuth();
-                }
-            });
-            box.addEventListener('focus', () => {
-                const firstEmpty = phoneBoxes.findIndex(b => !b.value);
-                if (firstEmpty !== -1 && firstEmpty < i) { phoneBoxes[firstEmpty].focus(); return; }
-                box.select();
-            });
-            box.addEventListener('paste', e => {
-                e.preventDefault();
-                const text = (e.clipboardData || window.clipboardData).getData('text');
-                const digits = normalizePhone(text).slice(0, 10);
-                phoneBoxes.forEach((b, k) => { b.value = digits[k] || ''; });
-                syncPhoneBoxStyles();
-                if (digits.length === phoneBoxes.length) document.getElementById('authPassword').focus();
-                else phoneBoxes[Math.min(digits.length, phoneBoxes.length - 1)].focus();
-            });
-        });
-
         // ==========================================
         // MY ACCOUNT PAGE (profile, orders, saved address)
         // ==========================================
@@ -1848,13 +1768,13 @@
             const meta = (currentUser && currentUser.user_metadata) || {};
             const name = meta.full_name || 'My Account';
             document.getElementById('acctName').textContent = name;
-            document.getElementById('acctPhone').textContent = meta.phone || '';
+            document.getElementById('acctPhone').textContent = (currentUser && currentUser.email) || '';
             renderAvatar();
             const since = currentUser && currentUser.created_at
                 ? new Date(currentUser.created_at).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '';
             document.getElementById('acctSince').textContent = since ? 'Member since ' + since : 'Member';
             document.getElementById('acctNameInput').value = meta.full_name || '';
-            document.getElementById('acctPhoneInput').value = meta.phone ? '+91 ' + meta.phone : '';
+            document.getElementById('acctPhoneInput').value = (currentUser && currentUser.email) || '';
         }
 
         function setAcctTab(tab) {
@@ -1887,7 +1807,7 @@
             try {
                 if (!currentUser) return;
                 const meta = currentUser.user_metadata || {};
-                const phone = normalizePhone(meta.phone || (currentUser.email || '').split('@')[0]);
+                const phone = normalizePhone(meta.phone || '');
                 let filter = `id.eq.${currentUser.id}`;
                 if (isValidPhone(phone)) filter += `,phone.eq.${phone}`;
                 const { error } = await supabaseClient.from('customers').update(fields).or(filter);
@@ -2133,7 +2053,7 @@
                 const check = await supabaseClient.auth.signInWithPassword({ email, password: cur });
                 if (check.error) { err.textContent = 'Current password is incorrect.'; return; }
                 const { error } = await supabaseClient.auth.updateUser({ password: nw });
-                if (error) { err.textContent = error.message; return; }
+                if (error) { console.error(error); err.textContent = 'Could not change password. Please try again.'; return; }
                 ['pwCurrent', 'pwNew', 'pwConfirm'].forEach(id => document.getElementById(id).value = '');
                 resetPwEyes();
                 showToast('✅ Password changed', 'success');
@@ -2164,12 +2084,14 @@
 
         document.getElementById('tabLogin').addEventListener('click', () => setAuthMode('login'));
         document.getElementById('tabSignup').addEventListener('click', () => setAuthMode('signup'));
+        document.getElementById('authPhone').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10); });
+        document.getElementById('authPhone').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('authPassword').focus(); });
         document.getElementById('authSubmitBtn').addEventListener('click', submitAuth);
         document.getElementById('authCancelBtn').addEventListener('click', closeAuth);
         document.getElementById('authOverlay').addEventListener('click', function(e) { if (e.target === this) closeAuth(); });
         // Enter in the name box -> first mobile number box; Enter in the password box -> submit
         document.getElementById('authName').addEventListener('keydown', e => {
-            if (e.key === 'Enter') { e.preventDefault(); phoneBoxes[0].focus(); }
+            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('authEmail').focus(); }
         });
         document.getElementById('authPassword').addEventListener('keydown', e => { if (e.key === 'Enter') submitAuth(); });
         document.getElementById('accountBtnDesktop').addEventListener('click', openAccount);
@@ -2185,15 +2107,9 @@
         document.querySelectorAll('.acct-tab').forEach(b => b.addEventListener('click', () => setAcctTab(b.dataset.tab)));
 
         supabaseClient.auth.onAuthStateChange((event, session) => {
-            if (!session) { currentUser = null; approvedUserId = null; refreshAccountUI(); closeAccountPage(); return; }
-            if (session.user.id === approvedUserId) {
-                // same approved user (token refresh / profile update)
-                currentUser = session.user; refreshAccountUI();
-            } else {
-                // not verified yet: treat as logged out until the approval list says OK
-                currentUser = null; refreshAccountUI();
-                setTimeout(() => verifySession(session.user), 0);
-            }
+            currentUser = session ? session.user : null;
+            refreshAccountUI();
+            if (!currentUser) closeAccountPage();
         });
 
         // ==========================================
@@ -2319,9 +2235,15 @@
                 }
                 console.log('✅ Order saved to database:', data);
                 showToast('✅ Order placed successfully!', 'success');
-                if (currentUser && !(currentUser.user_metadata || {}).address) {
-                    supabaseClient.auth.updateUser({ data: { address: address } })
-                        .then(r => { if (r.data && r.data.user) currentUser = r.data.user; syncCustomerRow({ address: address }); });
+                if (currentUser) {
+                    const um = currentUser.user_metadata || {};
+                    const save = {};
+                    if (!um.address) save.address = address;
+                    if (!um.phone && isValidPhone(normalizePhone(phone))) save.phone = normalizePhone(phone);
+                    if (Object.keys(save).length) {
+                        supabaseClient.auth.updateUser({ data: save })
+                            .then(r => { if (r.data && r.data.user) currentUser = r.data.user; syncCustomerRow(save); });
+                    }
                 }
             } catch (e) {
                 console.error('❌ Error:', e);
