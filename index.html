@@ -297,6 +297,10 @@
         .desktop-wrapper .botanical-badge small { font-weight: 400; font-size: 13px; display: block; opacity: 0.85; }
 
         /* ===== ENQUIRY ===== */
+        .desktop-wrapper .app-dl { position: fixed; right: 24px; bottom: 24px; z-index: 900; margin: 0; }
+        .desktop-wrapper .btn-app-dl { background: #1a1a1a; color: #fff; padding: 14px 26px; border-radius: 60px; font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; gap: 10px; text-decoration: none; transition: 0.2s; box-shadow: 0 8px 24px rgba(0,0,0,0.28); }
+        .desktop-wrapper .btn-app-dl:hover { background: #000; transform: scale(1.02); }
+        .desktop-wrapper .btn-app-dl small { font-weight: 500; opacity: 0.75; font-size: 12px; }
         .desktop-wrapper .enquiry-section { display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0 30px; padding: 20px; background: #fcf5f5; border-radius: 60px; align-items: center; justify-content: center; border: 1px solid rgba(200,16,46,0.08); }
         .desktop-wrapper .enquiry-section .enquiry-label { font-weight: 600; font-size: 16px; color: #1a1a1a; margin-right: 10px; }
         .desktop-wrapper .enquiry-section .enquiry-label i { color: #c8102e; margin-right: 6px; }
@@ -564,6 +568,9 @@
         .mobile-wrapper .botanical-badge { background: #c8102e; color: #fff; padding: 12px 20px; border-radius: 60px; font-weight: 700; font-size: 14px; box-shadow: 0 6px 14px rgba(200,16,46,0.25); text-align: center; margin-top: 12px; }
         .mobile-wrapper .botanical-badge small { font-weight: 400; font-size: 11px; display: block; opacity: 0.85; }
 
+        .mobile-wrapper .app-dl { position: fixed; right: 12px; bottom: calc(78px + env(safe-area-inset-bottom, 0px)); z-index: 900; margin: 0; }
+        .mobile-wrapper .btn-app-dl { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #1a1a1a; color: #fff; padding: 11px 16px; border-radius: 40px; font-weight: 700; font-size: 13px; text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
+        .mobile-wrapper .btn-app-dl small { font-weight: 500; opacity: 0.75; font-size: 11px; }
         .mobile-wrapper .enquiry-section { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 16px; padding: 14px; background: #fcf5f5; border-radius: 40px; align-items: center; justify-content: center; border: 1px solid rgba(200,16,46,0.08); }
         .mobile-wrapper .enquiry-section .enquiry-label { font-weight: 600; font-size: 12px; color: #1a1a1a; width: 100%; text-align: center; margin-bottom: 2px; }
         .mobile-wrapper .enquiry-section .enquiry-label i { color: #c8102e; margin-right: 4px; }
@@ -657,7 +664,7 @@
 <body>
 
     <!-- ===== LIGHTBOX ===== -->
-    <div id="lightbox" onclick="closeLightbox()">
+    <div id="lightbox">
         <button class="close-lightbox" onclick="closeLightbox()">&times;</button>
         <img id="lightboxImage" src="" alt="Product Image">
         <div class="lightbox-info">
@@ -740,6 +747,12 @@
                 PM <small>HANDMADE COSMETICS</small>
                 <i class="fas fa-certificate" style="margin-left: 12px; opacity: 0.9;"></i>
             </div>
+        </div>
+
+        <div class="app-dl">
+            <a href="https://www.mediafire.com/file/1zj1yk5vp13fngu/PM_Cosmetics.apk/file" target="_blank" rel="noopener noreferrer" class="btn-app-dl" id="downloadAppBtn">
+                <i class="fab fa-android"></i> Download App 
+            </a>
         </div>
 
         <div class="enquiry-section">
@@ -853,6 +866,12 @@
             </div>
         </div>
 
+        <div class="app-dl">
+            <a href="https://www.mediafire.com/file/1zj1yk5vp13fngu/PM_Cosmetics.apk/file" target="_blank" rel="noopener noreferrer" class="btn-app-dl" id="downloadAppBtn">
+                <i class="fab fa-android"></i> Download App
+            </a>
+        </div>
+
         <div class="enquiry-section">
             <span class="enquiry-label"><i class="fas fa-headset"></i> Need help? Contact us:</span>
             <a href="https://wa.me/919744705652" target="_blank" class="btn-enquiry-wa">
@@ -906,7 +925,7 @@
         <div class="checkout-form-box">
             <div id="authGuest">
                 <h2>👤 Welcome</h2>
-                <p class="subtitle">Customer Care : 9744705652</p>
+                <p class="subtitle">Login or create an account with your email</p>
                 <div class="auth-tabs">
                     <button id="tabLogin" class="active" type="button">Login</button>
                     <button id="tabSignup" type="button">Create account</button>
@@ -1137,9 +1156,6 @@
             document.body.style.overflow = '';
         }
 
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeLightbox();
-        });
 
         // ==========================================
         // TOAST
@@ -1509,7 +1525,6 @@
 
         document.getElementById('cartToggleDesktop').addEventListener('click', openCartDesktop);
         document.getElementById('cartCloseDesktop').addEventListener('click', closeCartDesktop);
-        document.getElementById('cartOverlayDesktop').addEventListener('click', closeCartDesktop);
 
         // ==========================================
         // CART TOGGLE - MOBILE
@@ -1549,7 +1564,6 @@
 
         document.getElementById('cartToggleMobile').addEventListener('click', openCartMobile);
         document.getElementById('cartCloseMobile').addEventListener('click', closeCartMobile);
-        document.getElementById('cartOverlayMobile').addEventListener('click', closeCartMobile);
         document.getElementById('navCartMobile').addEventListener('click', openCartMobile);
 
         // ==========================================
@@ -2088,7 +2102,6 @@
         document.getElementById('authPhone').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('authPassword').focus(); });
         document.getElementById('authSubmitBtn').addEventListener('click', submitAuth);
         document.getElementById('authCancelBtn').addEventListener('click', closeAuth);
-        document.getElementById('authOverlay').addEventListener('click', function(e) { if (e.target === this) closeAuth(); });
         // Enter in the name box -> first mobile number box; Enter in the password box -> submit
         document.getElementById('authName').addEventListener('keydown', e => {
             if (e.key === 'Enter') { e.preventDefault(); document.getElementById('authEmail').focus(); }
@@ -2138,9 +2151,6 @@
         }
 
         document.getElementById('cancelOrderBtn').addEventListener('click', closeCheckoutForm);
-        document.getElementById('checkoutFormOverlay').addEventListener('click', function(e) {
-            if (e.target === this) closeCheckoutForm();
-        });
 
         document.getElementById('checkoutBtnDesktop').addEventListener('click', function() {
             if (cart.length === 0) { showToast('Your cart is empty!', 'error'); return; }
@@ -2303,14 +2313,6 @@
         // ==========================================
         // KEYBOARD SHORTCUTS
         // ==========================================
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeCheckoutForm();
-                closeCartDesktop();
-                closeCartMobile();
-                closeLightbox();
-            }
-        });
 
         // ==========================================
         // INITIALIZE
