@@ -925,7 +925,7 @@
         <div class="checkout-form-box">
             <div id="authGuest">
                 <h2>👤 Welcome</h2>
-                <p class="subtitle">Login or create an account</p>
+                <p class="subtitle">Login or create an account with your mobile number</p>
                 <div class="auth-tabs">
                     <button id="tabLogin" class="active" type="button">Login</button>
                     <button id="tabSignup" type="button">Create account</button>
@@ -934,11 +934,7 @@
                     <label for="authName">Full Name *</label>
                     <input type="text" id="authName" placeholder="Enter your full name" autocomplete="name">
                 </div>
-                <div class="form-group">
-                    <label for="authEmail">Email *</label>
-                    <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false">
-                </div>
-                <div class="form-group" id="authPhoneGroup" style="display:none;">
+                <div class="form-group" id="authPhoneGroup">
                     <label for="authPhone">Mobile Number *</label>
                     <input type="tel" id="authPhone" placeholder="10 digit mobile number" inputmode="numeric" maxlength="10" autocomplete="tel-national">
                 </div>
@@ -1032,7 +1028,7 @@
                             <input type="text" id="acctNameInput" placeholder="Your full name" autocomplete="name">
                         </div>
                         <div class="acct-field">
-                            <label for="acctPhoneInput">Email</label>
+                            <label for="acctPhoneInput">Mobile number</label>
                             <input type="text" id="acctPhoneInput" disabled>
                         </div>
                         <div class="acct-actions">
@@ -1618,7 +1614,7 @@
         }
         function rowToUser(r) {
             return {
-                id: r.id, email: r.email, created_at: r.created_at,
+                id: r.id, phone: r.phone, created_at: r.created_at,
                 user_metadata: { full_name: r.name || '', phone: r.phone || '', address: r.address || '', avatar_url: r.avatar_url || '' }
             };
         }
@@ -1650,7 +1646,6 @@
             document.getElementById('tabLogin').classList.toggle('active', !signup);
             document.getElementById('tabSignup').classList.toggle('active', signup);
             document.getElementById('authNameGroup').style.display = signup ? 'block' : 'none';
-            document.getElementById('authPhoneGroup').style.display = signup ? 'block' : 'none';
             document.getElementById('authSubmitText').textContent = signup ? 'Create account' : 'Login';
             document.getElementById('authPassword').setAttribute('autocomplete', signup ? 'new-password' : 'current-password');
             document.getElementById('authError').textContent = '';
@@ -1659,7 +1654,7 @@
         function openAuth() {
             document.getElementById('authGuest').style.display = 'block';
             setAuthMode(authMode);
-            setTimeout(() => { document.getElementById('authEmail').focus(); }, 150);
+            setTimeout(() => { document.getElementById('authPhone').focus(); }, 150);
             document.getElementById('authOverlay').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
@@ -1715,50 +1710,46 @@
             document.getElementById('customerAddress').focus();
         });
 
-        function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e); }
-
         async function submitAuth() {
             const errEl = document.getElementById('authError');
             errEl.textContent = '';
             const name = document.getElementById('authName').value.trim();
-            const email = document.getElementById('authEmail').value.trim().toLowerCase();
             const phone = normalizePhone(document.getElementById('authPhone').value);
             const password = document.getElementById('authPassword').value;
 
             if (authMode === 'signup' && !name) { errEl.textContent = 'Please enter your full name.'; return; }
-            if (!isValidEmail(email)) { errEl.textContent = 'Enter a valid email address.'; return; }
-            if (authMode === 'signup' && !isValidPhone(phone)) { errEl.textContent = 'Enter a valid 10-digit mobile number.'; return; }
+            if (!isValidPhone(phone)) { errEl.textContent = 'Enter a valid 10-digit mobile number.'; return; }
             if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
 
             const btn = document.getElementById('authSubmitBtn');
             btn.disabled = true;
             try {
                 let signedUser = null;
-                const hash = await hashPassword(email, password);
+                const hash = await hashPassword(phone, password);
                 if (authMode === 'signup') {
-                    const existing = await supabaseClient.from('customers').select('*').eq('email', email).limit(1);
+                    const existing = await supabaseClient.from('customers').select('*').eq('phone', phone).limit(1);
                     if (existing.error) { console.error(existing.error); errEl.textContent = 'Could not create your account. Please try again.'; return; }
                     const found = existing.data && existing.data[0];
                     if (found && found.password_hash) {
-                        errEl.textContent = 'This email is already registered. Please login.';
+                        errEl.textContent = 'This mobile number is already registered. Please login.';
                         return;
                     }
                     if (found) {
                         // old customer row without a password yet: set it now
-                        const up = await supabaseClient.from('customers').update({ name: name, phone: phone, password_hash: hash }).eq('id', found.id);
+                        const up = await supabaseClient.from('customers').update({ name: name, password_hash: hash }).eq('id', found.id);
                         if (up.error) { console.error(up.error); errEl.textContent = 'Could not create your account. Please try again.'; return; }
                         signedUser = rowToUser({ ...found, name: name, phone: phone });
                     } else {
-                        const row = { id: newId(), name: name, email: email, phone: phone, password_hash: hash };
+                        const row = { id: newId(), name: name, phone: phone, password_hash: hash };
                         const ins = await supabaseClient.from('customers').insert([row]).select();
                         if (ins.error) { console.error(ins.error); errEl.textContent = 'Could not create your account. Please try again.'; return; }
                         signedUser = rowToUser((ins.data && ins.data[0]) || { ...row, created_at: new Date().toISOString() });
                     }
                     showToast('✅ Account created!', 'success');
                 } else {
-                    const { data, error } = await supabaseClient.from('customers').select('*').eq('email', email).eq('password_hash', hash).limit(1);
+                    const { data, error } = await supabaseClient.from('customers').select('*').eq('phone', phone).eq('password_hash', hash).limit(1);
                     if (error) { console.error(error); errEl.textContent = 'Could not login right now. Please try again.'; return; }
-                    if (!data || data.length === 0) { errEl.textContent = 'Wrong email or password.'; return; }
+                    if (!data || data.length === 0) { errEl.textContent = 'Wrong mobile number or password.'; return; }
                     signedUser = rowToUser(data[0]);
                     showToast('✅ Logged in!', 'success');
                 }
@@ -1792,13 +1783,13 @@
             const meta = (currentUser && currentUser.user_metadata) || {};
             const name = meta.full_name || 'My Account';
             document.getElementById('acctName').textContent = name;
-            document.getElementById('acctPhone').textContent = (currentUser && currentUser.email) || '';
+            document.getElementById('acctPhone').textContent = (currentUser && currentUser.user_metadata && currentUser.user_metadata.phone) || '';
             renderAvatar();
             const since = currentUser && currentUser.created_at
                 ? new Date(currentUser.created_at).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '';
             document.getElementById('acctSince').textContent = since ? 'Member since ' + since : 'Member';
             document.getElementById('acctNameInput').value = meta.full_name || '';
-            document.getElementById('acctPhoneInput').value = (currentUser && currentUser.email) || '';
+            document.getElementById('acctPhoneInput').value = (currentUser && currentUser.user_metadata && currentUser.user_metadata.phone) || '';
         }
 
         function setAcctTab(tab) {
@@ -2056,11 +2047,11 @@
             const btn = document.getElementById('pwSave');
             btn.disabled = true;
             try {
-                const email = currentUser.email;
-                const curHash = await hashPassword(email, cur);
+                const phoneId = (currentUser.user_metadata || {}).phone || '';
+                const curHash = await hashPassword(phoneId, cur);
                 const check = await supabaseClient.from('customers').select('id').eq('id', currentUser.id).eq('password_hash', curHash).limit(1);
                 if (check.error || !check.data || check.data.length === 0) { err.textContent = 'Current password is incorrect.'; return; }
-                const { error } = await updateCustomer({ password_hash: await hashPassword(email, nw) });
+                const { error } = await updateCustomer({ password_hash: await hashPassword(phoneId, nw) });
                 if (error) { console.error(error); err.textContent = 'Could not change password. Please try again.'; return; }
                 ['pwCurrent', 'pwNew', 'pwConfirm'].forEach(id => document.getElementById(id).value = '');
                 resetPwEyes();
@@ -2098,7 +2089,7 @@
         document.getElementById('authCancelBtn').addEventListener('click', closeAuth);
         // Enter in the name box -> first mobile number box; Enter in the password box -> submit
         document.getElementById('authName').addEventListener('keydown', e => {
-            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('authEmail').focus(); }
+            if (e.key === 'Enter') { e.preventDefault(); document.getElementById('authPhone').focus(); }
         });
         document.getElementById('authPassword').addEventListener('keydown', e => { if (e.key === 'Enter') submitAuth(); });
         document.getElementById('accountBtnDesktop').addEventListener('click', openAccount);
