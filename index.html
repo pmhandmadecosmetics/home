@@ -925,7 +925,7 @@
         <div class="checkout-form-box">
             <div id="authGuest">
                 <h2>👤 Welcome</h2>
-                <p class="subtitle">Login or create an account with your email</p>
+                <p class="subtitle">Login or create an account</p>
                 <div class="auth-tabs">
                     <button id="tabLogin" class="active" type="button">Login</button>
                     <button id="tabSignup" type="button">Create account</button>
@@ -1583,13 +1583,9 @@
 
 
         // ==========================================
-        // ACCOUNT: SIGN UP / LOGIN WITH MOBILE NUMBER
-        // ==========================================
-        // The mobile number becomes a hidden email-style id for Supabase Auth.
-        // In Supabase: Authentication -> Providers -> Email -> turn OFF "Confirm email".
-        // Supabase checks that this domain can receive email (MX records), so a made-up domain is rejected.
-        // kcst.com is used here; no email is ever sent while "Confirm email" is OFF. If you own a domain with email set up, use that instead.
-        const AUTH_EMAIL_DOMAIN = 'kcst.com';
+        // ACCOUNT: SIMPLE SIGN UP / LOGIN (no email verification)
+        // Accounts live in the 'customers' table, saved just like orders are.
+        // Nothing is ever emailed. Run pm_accounts_setup.sql once in Supabase.
         let currentUser = null;
         let authMode = 'login';
         let afterLoginCheckout = null;
@@ -1601,7 +1597,48 @@
             return d;
         }
         function isValidPhone(d) { return /^[6-9]\d{9}$/.test(d); }
-        function phoneToEmail(d) { return `${d}@${AUTH_EMAIL_DOMAIN}`; }
+        // ----- simple account helpers (customers table, no Supabase Auth) -----
+        const SESSION_KEY = 'pm_session_user';
+        function newId() {
+            if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+        }
+        async function hashPassword(email, password) {
+            const text = 'pm|' + email + '|' + password;
+            try {
+                if (window.crypto && crypto.subtle) {
+                    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+                    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+                }
+            } catch (e) {}
+            let h = 5381; for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) >>> 0;
+            return 'f' + h.toString(16);
+        }
+        function rowToUser(r) {
+            return {
+                id: r.id, email: r.email, created_at: r.created_at,
+                user_metadata: { full_name: r.name || '', phone: r.phone || '', address: r.address || '', avatar_url: r.avatar_url || '' }
+            };
+        }
+        function saveSession() {
+            try { if (currentUser) localStorage.setItem(SESSION_KEY, JSON.stringify(currentUser)); else localStorage.removeItem(SESSION_KEY); } catch (e) {}
+        }
+        // update the customer's row and keep currentUser in step
+        async function updateCustomer(fields) {
+            if (!currentUser) return { error: { message: 'not logged in' } };
+            const { error } = await supabaseClient.from('customers').update(fields).eq('id', currentUser.id);
+            if (error) return { error };
+            const m = currentUser.user_metadata || {};
+            if ('name' in fields) m.full_name = fields.name || '';
+            if ('phone' in fields) m.phone = fields.phone || '';
+            if ('address' in fields) m.address = fields.address || '';
+            if ('avatar_url' in fields) m.avatar_url = fields.avatar_url || '';
+            currentUser.user_metadata = m;
+            saveSession();
+            return { error: null };
+        }
         function escapeHtml(t) {
             return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         }
@@ -1678,17 +1715,6 @@
             document.getElementById('customerAddress').focus();
         });
 
-        // popup shown after sign-up (and when an unverified account tries to login)
-        function showSignupDone() {
-            document.getElementById('signupDoneOverlay').classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-        document.getElementById('signupDoneOk').addEventListener('click', function() {
-            document.getElementById('signupDoneOverlay').classList.remove('active');
-            setAuthMode('login');
-            document.getElementById('authPassword').focus();
-        });
-
         function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e); }
 
         async function submitAuth() {
@@ -1708,52 +1734,36 @@
             btn.disabled = true;
             try {
                 let signedUser = null;
+                const hash = await hashPassword(email, password);
                 if (authMode === 'signup') {
-                    const { data, error } = await supabaseClient.auth.signUp({
-                        email, password,
-                        options: { data: { full_name: name, phone: phone } }
-                    });
-                    if (error) {
-                        errEl.textContent = /already|registered/i.test(error.message)
-                            ? 'This email is already registered. Please login.'
-                            : /rate limit/i.test(error.message)
-                                ? 'Too many sign-up attempts right now. Please try again after a while.'
-                                : 'Could not create your account. Please try again.';
-                        return;
-                    }
-                    // email already has a login (Supabase returns a fake user with no identities)
-                    if (!data.user || (data.user.identities && data.user.identities.length === 0)) {
+                    const existing = await supabaseClient.from('customers').select('*').eq('email', email).limit(1);
+                    if (existing.error) { console.error(existing.error); errEl.textContent = 'Could not create your account. Please try again.'; return; }
+                    const found = existing.data && existing.data[0];
+                    if (found && found.password_hash) {
                         errEl.textContent = 'This email is already registered. Please login.';
                         return;
                     }
-                    // add the new user to the staff users list
-                    try {
-                        const have = await supabaseClient.from('customers').select('id').eq('id', data.user.id);
-                        if (!have.error && (!have.data || have.data.length === 0)) {
-                            await supabaseClient.from('customers').insert([{ id: data.user.id, name: name, email: email, phone: phone }]);
-                        }
-                    } catch (e) { console.error(e); }
-                    if (!data.session) {
-                        // email confirmation is switched on in Supabase: they must confirm first
-                        document.getElementById('authPassword').value = '';
-                        showSignupDone();
-                        return;
+                    if (found) {
+                        // old customer row without a password yet: set it now
+                        const up = await supabaseClient.from('customers').update({ name: name, phone: phone, password_hash: hash }).eq('id', found.id);
+                        if (up.error) { console.error(up.error); errEl.textContent = 'Could not create your account. Please try again.'; return; }
+                        signedUser = rowToUser({ ...found, name: name, phone: phone });
+                    } else {
+                        const row = { id: newId(), name: name, email: email, phone: phone, password_hash: hash };
+                        const ins = await supabaseClient.from('customers').insert([row]).select();
+                        if (ins.error) { console.error(ins.error); errEl.textContent = 'Could not create your account. Please try again.'; return; }
+                        signedUser = rowToUser((ins.data && ins.data[0]) || { ...row, created_at: new Date().toISOString() });
                     }
-                    signedUser = data.user;
                     showToast('✅ Account created!', 'success');
                 } else {
-                    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                    if (error) {
-                        if (/not confirmed/i.test(error.message)) { showSignupDone(); return; }
-                        errEl.textContent = /invalid/i.test(error.message)
-                            ? 'Wrong email or password.'
-                            : 'Could not login right now. Please try again.';
-                        return;
-                    }
-                    signedUser = data.user;
+                    const { data, error } = await supabaseClient.from('customers').select('*').eq('email', email).eq('password_hash', hash).limit(1);
+                    if (error) { console.error(error); errEl.textContent = 'Could not login right now. Please try again.'; return; }
+                    if (!data || data.length === 0) { errEl.textContent = 'Wrong email or password.'; return; }
+                    signedUser = rowToUser(data[0]);
                     showToast('✅ Logged in!', 'success');
                 }
                 currentUser = signedUser;
+                saveSession();
                 refreshAccountUI();
                 document.getElementById('authPassword').value = '';
                 const next = afterLoginCheckout;
@@ -1768,8 +1778,8 @@
         }
 
         async function logoutUser() {
-            await supabaseClient.auth.signOut();
             currentUser = null;
+            saveSession();
             refreshAccountUI();
             closeAccountPage();
             showToast('Logged out', 'info');
@@ -1817,17 +1827,7 @@
         }
 
         // keep the staff page's user list (customers table) in step with the account details
-        async function syncCustomerRow(fields) {
-            try {
-                if (!currentUser) return;
-                const meta = currentUser.user_metadata || {};
-                const phone = normalizePhone(meta.phone || '');
-                let filter = `id.eq.${currentUser.id}`;
-                if (isValidPhone(phone)) filter += `,phone.eq.${phone}`;
-                const { error } = await supabaseClient.from('customers').update(fields).or(filter);
-                if (error) console.error('Customer sync error:', error);
-            } catch (e) { console.error(e); }
-        }
+        async function syncCustomerRow(fields) { /* customers row is the account itself now */ }
 
         async function saveAddress() {
             if (!currentUser) return;
@@ -1835,10 +1835,8 @@
             const btn = document.getElementById('addrSave');
             btn.disabled = true;
             try {
-                const { data, error } = await supabaseClient.auth.updateUser({ data: { address: address } });
+                const { error } = await updateCustomer({ address: address || null });
                 if (error) { showToast('Could not save address', 'error'); return; }
-                if (data && data.user) currentUser = data.user;
-                syncCustomerRow({ address: address || null });
                 showToast('✅ Address saved', 'success');
                 renderAddress(false);
             } catch (e) {
@@ -1855,10 +1853,8 @@
             const btn = document.getElementById('profileSave');
             btn.disabled = true;
             try {
-                const { data, error } = await supabaseClient.auth.updateUser({ data: { full_name: name } });
+                const { error } = await updateCustomer({ name: name });
                 if (error) { showToast('Could not save changes', 'error'); return; }
-                if (data && data.user) currentUser = data.user;
-                syncCustomerRow({ name: name });
                 fillAccountHero();
                 refreshAccountUI();
                 showToast('✅ Profile updated', 'success');
@@ -2013,8 +2009,7 @@
             if (!up.error) {
                 const { data: pub } = supabaseClient.storage.from('avatars').getPublicUrl(path);
                 const url = pub.publicUrl + '?v=' + Date.now();
-                const { data, error } = await supabaseClient.auth.updateUser({ data: { avatar_url: url } });
-                if (!error && data && data.user) currentUser = data.user;
+                await updateCustomer({ avatar_url: url });
                 try { localStorage.removeItem(localAvatarKey()); } catch (e) {}
                 renderAvatar();
                 showToast('✅ Profile photo updated', 'success');
@@ -2034,8 +2029,7 @@
             if (!currentUser) return;
             try { localStorage.removeItem(localAvatarKey()); } catch (e) {}
             try { await supabaseClient.storage.from('avatars').remove([`${currentUser.id}/avatar.jpg`]); } catch (e) {}
-            const { data } = await supabaseClient.auth.updateUser({ data: { avatar_url: null } });
-            if (data && data.user) currentUser = data.user;
+            await updateCustomer({ avatar_url: null });
             renderAvatar();
             showToast('Photo removed', 'info');
         }
@@ -2062,11 +2056,11 @@
             const btn = document.getElementById('pwSave');
             btn.disabled = true;
             try {
-                const meta = currentUser.user_metadata || {};
-                const email = currentUser.email || phoneToEmail(meta.phone || '');
-                const check = await supabaseClient.auth.signInWithPassword({ email, password: cur });
-                if (check.error) { err.textContent = 'Current password is incorrect.'; return; }
-                const { error } = await supabaseClient.auth.updateUser({ password: nw });
+                const email = currentUser.email;
+                const curHash = await hashPassword(email, cur);
+                const check = await supabaseClient.from('customers').select('id').eq('id', currentUser.id).eq('password_hash', curHash).limit(1);
+                if (check.error || !check.data || check.data.length === 0) { err.textContent = 'Current password is incorrect.'; return; }
+                const { error } = await updateCustomer({ password_hash: await hashPassword(email, nw) });
                 if (error) { console.error(error); err.textContent = 'Could not change password. Please try again.'; return; }
                 ['pwCurrent', 'pwNew', 'pwConfirm'].forEach(id => document.getElementById(id).value = '');
                 resetPwEyes();
@@ -2119,11 +2113,21 @@
         document.getElementById('profileSave').addEventListener('click', saveProfile);
         document.querySelectorAll('.acct-tab').forEach(b => b.addEventListener('click', () => setAcctTab(b.dataset.tab)));
 
-        supabaseClient.auth.onAuthStateChange((event, session) => {
-            currentUser = session ? session.user : null;
-            refreshAccountUI();
-            if (!currentUser) closeAccountPage();
-        });
+        // restore the saved login when the page opens, then refresh it from the customers table
+        (async function restoreSession() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+                if (!saved || !saved.id) return;
+                currentUser = saved;
+                refreshAccountUI();
+                const { data, error } = await supabaseClient.from('customers').select('*').eq('id', saved.id).limit(1);
+                if (!error) {
+                    if (data && data.length) { currentUser = rowToUser(data[0]); saveSession(); }
+                    else { currentUser = null; saveSession(); closeAccountPage(); }
+                    refreshAccountUI();
+                }
+            } catch (e) { console.error(e); }
+        })();
 
         // ==========================================
         // CHECKOUT
@@ -2250,10 +2254,7 @@
                     const save = {};
                     if (!um.address) save.address = address;
                     if (!um.phone && isValidPhone(normalizePhone(phone))) save.phone = normalizePhone(phone);
-                    if (Object.keys(save).length) {
-                        supabaseClient.auth.updateUser({ data: save })
-                            .then(r => { if (r.data && r.data.user) currentUser = r.data.user; syncCustomerRow(save); });
-                    }
+                    if (Object.keys(save).length) { updateCustomer(save); }
                 }
             } catch (e) {
                 console.error('❌ Error:', e);
